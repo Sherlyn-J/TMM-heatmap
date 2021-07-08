@@ -1,0 +1,49 @@
+---
+title: "EdgeR branch"
+output: html_notebook
+---
+
+## Load data and libraries
+```{r}
+library(dplyr)
+library(tidyr)
+library(plyr)
+
+df <- read.delim("raw/counts/file", check.names = F) 
+names(df)[1] <- "Gene"
+df <- ddply(df,"Gene",numcolwise(sum))
+
+# List of genes in selected pathway
+geneset <- c(Gene1, Gene2, Gene3, ...)
+```
+
+## Do edgeR TMM normalization
+```{r}
+library(edgeR)
+
+df <- df[ !duplicated(df$Gene), ]
+row.names(df) <- df$Gene
+df <- df[,!(names(df) %in% c("Gene"))]
+y <- DGEList(counts=as.matrix(df))
+keep <- filterByExpr(y)
+y <- calcNormFactors(y)
+```
+
+## Plot heat map of selected pathway
+```{r}
+library(superheat)
+
+supermat <- y@.Data[[1]]
+supermat <- t(supermat[rownames(supermat) %in% geneset, ])
+png("path/to/png/file", units = "in", width = xx, height = xx, res = 240)
+hmap <- superheat(supermat,
+          scale = F,
+          pretty.order.rows = T,
+          pretty.order.cols = T,
+          heat.col.scheme = "viridis",
+          bottom.label.text.alignment = "left",
+          bottom.label.text.angle = 90,
+          left.label.text.alignment = "left")
+print(hmap)
+dev.off()
+```
